@@ -1,5 +1,5 @@
 class Vertex implements Comparable<Vertex> {
-	int distance;
+	int key;
 	Vertex parent;
 	int index;
 
@@ -8,6 +8,13 @@ class Vertex implements Comparable<Vertex> {
 	}
 
 	public int compareTo (Vertex v) {
-		return this.distance - v.distance;
+		return this.key - v.key;
+	}
+
+	public String toString() {
+		String str = index + ": dist = " + key + ", parent = ";
+		if (parent == null)
+			return str + "nil";
+		return str + parent.index;
 	}
 }

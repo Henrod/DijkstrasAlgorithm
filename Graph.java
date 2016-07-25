@@ -1,51 +1,66 @@
 import java.util.*;
 
 class Graph {
-	private HashMap<Vertex, List<Edge>> adj;
-	private List<Vertex> vertices;
-	static final int INFINITE = Integer.MAX_VALUE;
+	private Vertex[] vertices;
+	private HashMap<Vertex, List<Vertex>> adj;
+	private HashMap<Vertex, HashMap<Vertex, Integer>> w;
 
-	public Graph (HashMap<Vertex, List<Edge>> adj, List<Vertex> vertices) {
-		this.adj = adj;
-		this.vertices = vertices;
+	public Graph(int N, List<Edge> edges) {
+		vertices = new Vertex[N];
+		adj = new HashMap<>();
+		w = new HashMap<>();
+
+		for (int i = 0; i < N; i++) {
+			vertices[i] = new Vertex(i + 1);
+			adj.put(vertices[i], new LinkedList<>());
+			w.put(vertices[i], new HashMap<>());
+		}
+
+		for (Edge e : edges) {
+			Vertex u = vertices[e.u];
+			Vertex v = vertices[e.v];
+			adj.get(u).add(v);
+			w.get(u).put(v, e.w);
+		}
 	}
 
-	private void initialize_single_source (int s) {
+	private int weight(Vertex u, Vertex v) {
+		return w.get(u).get(v);
+	}
+
+	private List<Vertex> adj(Vertex u) {
+		return adj.get(u);
+	}
+
+	private void initialize(Vertex s) {
 		for (Vertex v : vertices) {
-			v.distance = INFINITE;
+			v.key = Integer.MAX_VALUE;
 			v.parent = null;
 		}
-		vertices.get(s - 1).distance = 0;
+
+		s.key = 0;
 	}
 
-	public void print (int s) {
-		Vertex v = vertices.get(s - 1);
-		while (v != null) {
-			if (v.distance == INFINITE)
-				System.out.print(v.index + ": -1 | ");
-			else
-				System.out.print(v.index + ": " + v.distance + " | ");
-			v = v.parent;
+	public static Vertex[] Dijkstra(Graph graph, int source) {
+		Vertex s = graph.vertices[source];
+		graph.initialize(s);
+
+		Heap heap = new Heap(graph.vertices.length);
+		for (Vertex v : graph.vertices) {
+			heap.insert(v);
 		}
-		System.out.println("");
-	}
 
-	public void dijkstra (int s) {
-		initialize_single_source(s);
-		PriorityQueue<Vertex> pq = new PriorityQueue<>(vertices);
-
-		while (!pq.isEmpty()) {
-			Vertex u = pq.poll();
-			for (Edge e : adj.get(u)) {
-				if (e.vertex.distance > u.distance + e.weight) {
-					e.vertex.parent = u;
-					if (u.distance != INFINITE) {
-						pq.remove(e.vertex);
-						e.vertex.distance = u.distance + e.weight;
-						pq.offer(e.vertex);
-					}
+		while (!heap.isEmpty()) {
+			Vertex u = heap.extractMin();
+			for (Vertex v : graph.adj(u)) {
+				if (v.key > u.key + graph.weight(u, v)) {
+					v.key = u.key + graph.weight(u, v);
+					v.parent = u;
+					heap.decreaseKey(v);
 				}
 			}
 		}
+
+		return graph.vertices;
 	}
 }
